@@ -1,0 +1,15 @@
+apiVersion: 0.2.0
+environments:
+  default:
+    destination:
+      namespace: kubeflow
+      server: https://testmlops--jiovishwam-dev-r-f91a8f-59a16ccd.hcp.centralindia.azmk8s.io:443
+    k8sVersion: v1.7.0
+    path: default
+kind: ksonnet.io/app
+name: ks-object
+registries:
+  incubator:
+    protocol: github
+    uri: github.com/ksonnet/parts/tree/master/incubator
+version: 0.0.1
