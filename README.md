@@ -9,6 +9,9 @@
   The Command will disply the azure cluter node to your terminal.
  
     kubectl get nodes 
+        NAME                                  STATUS   ROLES   AGE     VERSION
+    aks-defaultpool-31705015-vmss000000   Ready    agent   6h40m   v1.19.7
+
 
 ## Verify if the kubeflow is installed.
   ns stands for namespace on your kubernetes cluster.  
@@ -21,11 +24,15 @@
  port forwarding makes possible to access the service from localhost to the cluster. its pre-built service provided by kubernetes. 
    
     kubectl port-forward svc/istio-ingressgateway 7777:80 -n istio-system
+        Forwarding from 127.0.0.1:7777 -> 80
+    Forwarding from [::1]:7777 -> 80
+
+    
    
  ## Go to your web Browser localhost:7777 for kubeflow dash borad.
      
     http://localhost:7777 
- 
+    
  
  ## Requirements
   [] Ksonnet CLI: ks
@@ -44,6 +51,16 @@
     ks param set pets-pvc storage "20Gi"
     ks apply ${ENV} -c pets-pvc
     
+    kubectl get pvc -n kubeflow 
+    
+        NAME             STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+    katib-mysql      Bound    pvc-b4dca223-4097-43ba-bb5d-174b3beb34ba   10Gi       RWO            default        6h18m
+    metadata-mysql   Bound    pvc-214e485c-e4f0-4916-940b-b95020e9e73a   10Gi       RWO            default        6h19m
+    minio-pv-claim   Bound    pvc-7d0d2776-fa10-4c92-8e9b-f891bc353edc   20Gi       RWO            default        6h18m
+    mysql-pv-claim   Bound    pvc-38a05625-95cc-490f-95e9-e362c6968f00   20Gi       RWO            default        6h18m
+    pets-pvc         Bound    pvc-52c2f03e-7c64-4a82-8309-a5c0eb886960   20Gi       RWO            default        4h50m
+
+
 ## Preparing the Training Data 
     # Configure and apply the get-data-job component this component will download the dataset,
     # annotations, the model we will use for the fine tune checkpoint, and
@@ -77,7 +94,7 @@
 
     ks apply ${ENV} -c decompress-data-job
  
-### pet record job
+### creating pet record job
     OBJ_DETECTION_IMAGE="lcastell/pets_object_detection"
     DATA_DIR_PATH="${MOUNT_PATH}"
     OUTPUT_DIR_PATH="${MOUNT_PATH}"
@@ -113,6 +130,25 @@ NOTE: The default TFJob api verison in the component is kubeflow.org/v1beta1. Yo
     ks param set tf-training-job tfjobApiVersion ${NEW_VERSION}
     
      ks apply ${ENV} -c tf-training-job
+  
+  
+## Monitor the TF-jobs
+    kubectl -n kubeflow describe tfjobs tf-training-job
+   
+   View logs of individual pods
+   
+    kubectl -n kubeflow get pods
+      tf-training-job-master-0                                       1/1     Running            0          147m
+      tf-training-job-ps-0                                           1/1     Running            0          147m
+      tf-training-job-worker-0                                       1/1     Running            0          147m
+      workflow-controller-7dc57f9b8f-vglvl                           1/1     Running            0          6h15m
+   
+   
+    kubectl -n kubeflow logs tf-training-job-master-0 
+    
+    
+   
+  
   
   
     
