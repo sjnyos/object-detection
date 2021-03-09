@@ -147,6 +147,52 @@ NOTE: The default TFJob api verison in the component is kubeflow.org/v1beta1. Yo
     kubectl -n kubeflow logs tf-training-job-master-0 
     
     
+## Export the TensorFlow Graph and Serve the model with TF Serving
+  Before exporting the graph we first need to identify a checkpoint candidate in the pets-pvc pvc under ${MOUNT_PATH}/train which is where the training job is saving the checkpoints.
+  
+    kubectl -n kubeflow exec tf-training-job-chief-0 -- ls ${MOUNT_PATH}/train
+    
+  outputs
+  
+      checkpoint
+    events.out.tfevents.1615272437.tf-training-job-master-0
+    events.out.tfevents.1615275113.tf-training-job-master-0
+    events.out.tfevents.1615280519.tf-training-job-master-0
+    graph.pbtxt
+    model.ckpt-0.data-00000-of-00001
+    model.ckpt-0.index
+    model.ckpt-0.meta
+    pipeline.config
+    
+  Once you have identified the checkpoint next step is to configure the checkpoint in the export-tf-graph-job component and apply it.
+  
+     CHECKPOINT="${TRAINING_DIR}/model.ckpt-<number>" #replace with your checkpoint number
+    INPUT_TYPE="image_tensor"
+    EXPORT_OUTPUT_DIR="${MOUNT_PATH}/exported_graphs"
+
+    ks param set export-tf-graph-job mountPath ${MOUNT_PATH}
+    ks param set export-tf-graph-job pvc ${PVC}
+    ks param set export-tf-graph-job image ${OBJ_DETECTION_IMAGE}
+    ks param set export-tf-graph-job pipelineConfigPath ${PIPELINE_CONFIG_PATH}
+    ks param set export-tf-graph-job trainedCheckpoint ${CHECKPOINT}
+    ks param set export-tf-graph-job outputDir ${EXPORT_OUTPUT_DIR}
+    ks param set export-tf-graph-job inputType ${INPUT_TYPE}
+
+    ks apply ${ENV} -c export-tf-graph-job
+  
+  Once the job is completed a new directory called exported_graphs under /pets_data in the pets-data-claim PCV
+will be created containing the model and the frozen graph.
+  
+  
+  
+  
+ 
+    
+ 
+ 
+
+    
+    
    
   
   
