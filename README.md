@@ -5,7 +5,7 @@
     vi kubeconfig  
     export KUBECONFIG=`pwd`/kubeconfig
 
-## Verify the Azure cluster
+## Verify the  Cluster
   The Command will disply the azure cluter node to your terminal.
  
     kubectl get nodes 
@@ -25,7 +25,8 @@
  ## Go to your web Browser localhost:7777 for kubeflow dash borad.
      
     http://localhost:7777 
-    
+ 
+
  
     
   
