@@ -1,0 +1,24 @@
+ app: coco
+    ksonnet.io/component: model1
+  name: coco-v1
+  namespace: obj
+spec:
+  template:
+    metadata:
+      labels:
+        app: coco
+        version: v1
+    spec:
+      containers:
+      - args:
+        - --port=9000
+        - --model_name=coco
+        - --model_base_path=gs://kai-test2-models/object-detection
+        command:
+        - /usr/bin/tensorflow_model_server
+        image: gcr.io/kubeflow-images-public/tensorflow-serving-1.8gpu:latest
+        imagePullPolicy: IfNotPresent
+        name: coco
+        ports:
+        - containerPort: 9000
+

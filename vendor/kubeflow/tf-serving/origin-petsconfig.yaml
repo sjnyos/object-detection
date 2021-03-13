@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: pets-model
+    ksonnet.io/component: pets-model
+  name: pets-model-v1
+  namespace: obj
+spec:
+   containers:
+   - args:
+     - --port=9000
+     - --model_name=pets-model
+     - --model_base_path=/mnt/exported_graphs/saved_model
+     command:
+     - /usr/bin/tensorflow_model_server
+     image: tensorflow/serving:1.10.0
+     imagePullPolicy: IfNotPresent
+     name: pets-model
+     ports:
+     - containerPort: 9000
+     volumeMounts:
+        - mountPath: /mnt
+          name: nfs
+   volumes:
+      - name: nfs
+        persistentVolumeClaim:
+          claimName: pets-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-coco-get
+      prefix: /models/coco/
+      rewrite: /
+      method: GET
+      service: coco.obj:8000
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-coco-post
+      prefix: /models/coco/
+      rewrite: /model/coco:predict
+      method: POST
+      service: coco.obj:8000
+  labels:
+    app: coco
+    ksonnet.io/component: model1
+  name: coco
+  namespace: obj
+spec:
+  ports:
+  - name: grpc-tf-serving
+    port: 9000
+    targetPort: 9000
+  - name: http-tf-serving-proxy
+    port: 8000
+    targetPort: 8000
+  selector:
+    app: coco
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    getambassador.io/config: |-
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-pets-model-get
+      prefix: /models/pets-model/
+      rewrite: /
+      method: GET
+      service: pets-model.obj:8000
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name: tfserving-mapping-pets-model-post
+      prefix: /models/pets-model/
+      rewrite: /model/pets-model:predict
+      method: POST
+      service: pets-model.obj:8000
+  labels:
+    app: pets-model
+    ksonnet.io/component: pets-model
+  name: pets-model
+  namespace: obj
+spec:
+  ports:
+  - name: grpc-tf-serving
+    port: 9000
+    targetPort: 9000
+  - name: http-tf-serving-proxy
+    port: 8000
+    targetPort: 8000
+  selector:
