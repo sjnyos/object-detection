@@ -182,6 +182,38 @@ NOTE: The default TFJob api verison in the component is kubeflow.org/v1beta1. Yo
   
   Once the job is completed a new directory called exported_graphs under /pets_data in the pets-data-claim PCV
 will be created containing the model and the frozen graph.
+
+## Serving the Model usinjg the TF-Serving(CPU)
+
+Before serving the model we need to perform q auick hack since the objecy detection export python api does not generate a version folder for saved mdoel. this hack consists on creating a directory and move some files to it. 
+
+    kubectl -n kubeflow exec -it pets-training-master-r1hv-0-i6k7c sh
+    mkdir /pets_data/exported_graphs/saved_model/1
+    cp /pets_data/exported_graphs/saved_model/* /pets_data/exported_graphs/saved_model/1
+  
+ ##Configuring the pets-model component in 'ks-app':
+
+     MODEL_COMPONENT=pets-model
+    MODEL_PATH=/mnt/exported_graphs/saved_model
+    MODEL_STORAGE_TYPE=nfs
+    NFS_PVC_NAME=pets-pvc
+
+    ks param set ${MODEL_COMPONENT} modelPath ${MODEL_PATH}
+    ks param set ${MODEL_COMPONENT} modelStorageType ${MODEL_STORAGE_TYPE}
+    ks param set ${MODEL_COMPONENT} nfsPVC ${NFS_PVC_NAME}
+
+    ks apply ${ENV} -c pets-model
+    
+  After applying the component see pets model using command and look at the logs 
+  
+     kubectl -n kubeflow get pods | grep pets-model
+     kubectl -n kubeflow logs <pod name>
+     
+     
+  
+  
+  
+    
   
   
   
